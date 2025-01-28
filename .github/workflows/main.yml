@@ -7,7 +7,7 @@ on:
 
 jobs:
   send_email:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       # Step 1: 检出代码仓库
@@ -34,3 +34,10 @@ jobs:
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
         run: |
           python "send_email.py"
+      - name: Delete Workflow Runs
+        uses: Mattraks/delete-workflow-runs@v2.0.6
+        with:
+         token: ${{ secrets.GITHUB_TOKEN }}
+         repository: ${{ github.repository }}
+         retain_days: 1
+         keep_minimum_runs: 0
