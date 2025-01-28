@@ -71,7 +71,7 @@ def send_email(smtp_server, smtp_port, smtp_user, smtp_pass, from_email, to_emai
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(from_email, to_email, msg.as_string())
 
-        print(f"邮件已成功发送到 {to_email}")
+        print(f"邮件已成功发送到")
         return True
 
     except Exception as e:
