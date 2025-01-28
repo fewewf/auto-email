@@ -66,7 +66,7 @@ def send_email(smtp_server, smtp_port, smtp_user, smtp_pass, from_email, to_emai
                 server.sendmail(from_email, to_email, msg.as_string())
         elif smtp_port == 587:
             # 使用 SMTP 和 starttls() 启用 TLS
-            with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
                 server.starttls()
                 server.login(smtp_user, smtp_pass)
                 server.sendmail(from_email, to_email, msg.as_string())
