@@ -1,4 +1,4 @@
-name: 自动群发邮件
+name: TEST N1
 
 on:
   schedule:
