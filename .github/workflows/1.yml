@@ -1,7 +1,7 @@
 name: Keep Servers Alive
 on:
   schedule:
-    - cron: '40 4 * * *'  # 每4小时执行一次
+    - cron: '50 4 * * *'  # 每4小时执行一次
   workflow_dispatch:
 env:
   TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
@@ -56,7 +56,7 @@ jobs:
             curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
             -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
             -d text="$spoiler_message" \
-            -d parse_mode="MarkdownV2" 
+            -d parse_mode="MarkdownV2" /dev/null 2>&1
            }
 
 
