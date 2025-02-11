@@ -3,7 +3,6 @@ import requests
 import json
 import smtplib
 import traceback
-import subprocess
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime
@@ -87,17 +86,15 @@ def send_email(smtp_server, smtp_port, smtp_user, smtp_pass, from_email, to_emai
         traceback.print_exc()
         return False
 
-import subprocess
-
 def send_telegram_notification(tg_id, tg_token, success_emails, failed_emails_with_reasons):
-    """发送 Telegram 消息（MarkdownV2 格式）"""
+    """发送 Telegram 消息（Markdown 格式）"""
     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    
+
     # 统计成功和失败的数量
     success_count = len(success_emails)
     failure_count = len(failed_emails_with_reasons)
     total_count = success_count + failure_count
-    
+
     # 构建消息头部
     message = (
         "🤖 **邮件群发状态报告**\n"
@@ -105,42 +102,31 @@ def send_telegram_notification(tg_id, tg_token, success_emails, failed_emails_wi
         f"📊 总计: `{total_count}` 个邮箱\n"
         f"✅ 成功: `{success_count}`个 | ❌ 失败: `{failure_count}`个\n\n"
     )
-    
+
     # 添加成功的邮箱列表
     for email in success_emails:
         message += f"邮箱：`{email}`\n状态: ✅ 发送成功\n"
-    
+
     # 添加失败的邮箱列表及原因
     for email, reason in failed_emails_with_reasons.items():
         message += f"邮箱：`{email}`\n状态: ❌ 发送失败\n失败原因: {reason}\n"
-    
-    # 为了支持 Telegram 的 MarkdownV2，转义特殊字符
-    escaped_message = message.replace('_', '\\_').replace('*', '\\*').replace('[', '\\[').replace(']', '\\]')
-    escaped_message = escaped_message.replace('(', '\\(').replace(')', '\\)').replace('~', '\\~').replace('`', '\\`')
-    escaped_message = escaped_message.replace('>', '\\>').replace('#', '\\#').replace('+', '\\+').replace('-', '\\-')
-    escaped_message = escaped_message.replace('=', '\\=').replace('|', '\\|').replace('{', '\\{').replace('}', '\\}')
-    escaped_message = escaped_message.replace('!', '\\!').replace('?', '\\?').replace(':', '\\:')
 
-    # 加入 spoiler 效果
-    spoiler_message = f"||{escaped_message}||"
-
-    # 使用 curl 发送请求到 Telegram
+   # 发送消息
+    url = f"https://api.telegram.org/bot{tg_token}/sendMessage"
+    payload = {
+        "chat_id": tg_id,
+        "text": message,
+        "parse_mode": "Markdown",  # 使用 Markdown 格式
+    }
     try:
-        subprocess.run(
-            [
-                "curl", "-s", "-X", "POST", 
-                f"https://api.telegram.org/bot{tg_token}/sendMessage",
-                "-d", f"chat_id={tg_id}",
-                "-d", f"text={spoiler_message}",
-                "-d", "parse_mode=MarkdownV2"
-            ],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE
-        )
-        print("Telegram 通知发送成功")
-    except subprocess.CalledProcessError as e:
-        print(f"Telegram 通知发送失败: {e}")
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            print("Telegram 通知发送成功")
+        else:
+            print(f"Telegram 通知发送失败: {response.status_code}, {response.text}")
+    except Exception as e:
+        print(f"发送 Telegram 通知时出现异常: {str(e)}")
+        traceback.print_exc()  # 打印完整的异常堆栈信息
 
 if __name__ == "__main__":
     try:
