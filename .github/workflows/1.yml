@@ -1,0 +1,119 @@
+name: Keep Servers Alive
+on:
+  schedule:
+    - cron: '40 4 * * *'  # 每4小时执行一次
+  workflow_dispatch:
+env:
+  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+  ACCOUNTS: ${{ secrets.ACCOUNTS }}
+
+jobs:
+  kee:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@main
+
+      - name: Install required packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass curl jq
+
+      - name: Process each account
+        run: |
+          run_remote_command() {
+            local RES=$1
+            local SSH_USER=$2
+            local SSH_PASS=$3
+            local REALITY=${4}
+            local SUUUID=$5
+            local TCP1_PORT=$6
+            local TCP2_PORT=$7
+            local UDP_PORT=$8
+            local HOST=$9
+            local ARGO_DOMAIN=${10}
+            local ARGO_AUTH=${11}
+            if [ -z "${ARGO_DOMAIN}" ]; then
+              echo "Argo域名为空，申请Argo临时域名"
+            else
+              echo "Argo已设置固定域名：${ARGO_DOMAIN}"
+            fi
+            remote_command="export reym=$REALITY UUID=$SUUID vless_port=$TCP1_PORT vmess_port=$TCP2_PORT hy2_port=$UDP_PORT reset=$RES ARGO_DOMAIN=${ARGO_DOMAIN} ARGO_AUTH=${ARGO_AUTH} && bash <(curl -Ls https://raw.githubusercontent.com/yonggekkk/sing-box-yg/main/serv00keep.sh)"
+            echo "Executing remote command on $HOST as $SSH_USER"
+            sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_USER@$HOST" "$remote_command" > /dev/null 2>&1
+          }
+
+          send_telegram_notification() {
+          local message=$1
+            # 加入 spoiler 效果
+            # 转义 MarkdownV2 中的特殊字符，特别是 '!' 字符
+             local escaped_message=$(echo "$message" | sed 's/[][(){}._*+^$|\\?-]/\\&/g' | sed 's/!/\\!/g')
+    
+           # 使用 MarkdownV2 添加 spoiler 效果
+             local spoiler_message="||$escaped_message||"
+    
+            curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+            -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+            -d text="$spoiler_message" \
+            -d parse_mode="MarkdownV2" 
+           }
+
+
+          echo "*****************************************************"
+          echo "*****************************************************"
+          echo "甬哥Github项目 ：github.com/yonggekkk"
+          echo "甬哥Blogger博客 ：ygkkk.blogspot.com"
+          echo "甬哥YouTube频道 ：www.youtube.com/@ygkkk"
+          echo "自动远程部署并保活Serv00三合一协议脚本【Github】"
+          echo "版本：V25.1.22"
+          echo "*****************************************************"
+          echo "*****************************************************"
+
+          count=0
+          for account in $(echo "${ACCOUNTS}" | jq -c '.[]'); do
+            count=$((count+1))
+            RES=$(echo $account | jq -r '.RES')
+            SSH_USER=$(echo $account | jq -r '.SSH_USER')
+            SSH_PASS=$(echo $account | jq -r '.SSH_PASS')
+            REALITY=$(echo $account | jq -r '.REALITY')
+            SUUUID=$(echo $account | jq -r '.SUUID')
+            TCP1_PORT=$(echo $account | jq -r '.TCP1_PORT')
+            TCP2_PORT=$(echo $account | jq -r '.TCP2_PORT')
+            UDP_PORT=$(echo $account | jq -r '.UDP_PORT')
+            HOST=$(echo $account | jq -r '.HOST')
+            ARGO_DOMAIN=$(echo $account | jq -r '.ARGO_DOMAIN')
+            ARGO_AUTH=$(echo $account | jq -r '.ARGO_AUTH')
+
+            if sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_USER@$HOST" -q exit; then
+              echo "🎉恭喜！✅第【$count】台服务器连接成功！🚀服务器地址：$HOST ，账户"
+              if [ -z "${ARGO_DOMAIN}" ]; then
+                check_process="ps aux | grep '[c]onfig' > /dev/null && ps aux | grep [l]ocalhost:$TCP2_PORT > /dev/null"
+              else
+                check_process="ps aux | grep '[c]onfig' > /dev/null && ps aux | grep '[t]oken $ARGO_AUTH' > /dev/null"
+              fi
+
+              if ! sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_USER@$HOST" "$check_process" || [[ "$RES" =~ ^[Yy]$ ]]; then
+                echo "⚠️检测到主进程或者argo进程未启动，或者执行重置"
+                send_telegram_notification "⚠️检测到主进程或者argo进程未启动，或者执行重置🚀服务器地址：$HOST ||需要重置的详细信息||"
+                output=$(run_remote_command "$RES" "$SSH_USER" "$SSH_PASS" "${REALITY}" "$SUUID" "$TCP1_PORT" "$TCP2_PORT" "$UDP_PORT" "$HOST" "${ARGO_DOMAIN}" "${ARGO_AUTH}")
+                echo "远程命令执行结果已成功隐藏。"
+              else
+                echo "🎉恭喜！✅检测到所有进程正常运行中 "
+                send_telegram_notification "🎉恭喜！✅检测到所有进程正常运行中！🚀服务器地址:$HOST"
+              fi
+            else
+              echo "===================================================="
+              echo "💥杯具！❌第【$count】台服务器连接失败！🚀服务器地址：$HOST ，账户名：$SSH_USER"
+              send_telegram_notification "💥杯具！❌第【$count】台服务器连接失败！🚀服务器地址：$HOST ，账户名：$SSH_USER ||错误的账户或服务器故障||"
+              echo "===================================================="
+            fi
+          done
+
+      - name: Delete Workflow Runs
+        uses: Mattraks/delete-workflow-runs@v2.0.6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 1
+          keep_minimum_runs: 0
