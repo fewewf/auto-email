@@ -13,8 +13,8 @@ jobs:
       # Step 1: 检出代码仓库
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Wait for a random time
-        run: sleep $(( RANDOM % 600 ))
+     # - name: Wait for a random time
+        #run: sleep $(( RANDOM % 600 ))
       # Step 2: 设置 Python 环境
       - name: Set up Python
         uses: actions/setup-python@v4
