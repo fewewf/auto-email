@@ -23,7 +23,7 @@ jobs:
       - name: Process each account
         run: |
           run_remote_command() {
-            local RES="Yy"
+            local RES="y"
             local SSH_USER=$2
             local SSH_PASS=$3
             local REALITY=${4}
@@ -93,7 +93,7 @@ jobs:
                 check_process="ps aux | grep '[c]onfig' > /dev/null && ps aux | grep '[t]oken $ARGO_AUTH' > /dev/null"
               fi
 
-              if ! sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_USER@$HOST" "$check_process" || [[ "$RES" =~ ^[Yy]$ ]]; then
+              if ! sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=yes "$SSH_USER@$HOST" "$check_process" || [[ "$RES" =~ ^[Yy]$ ]]; then
                 echo "⚠️检测到主进程或者argo进程未启动，或者执行重置"
                 send_telegram_notification "⚠️检测到主进程或者argo进程未启动，或者执行重置🚀服务器地址：$HOST ||需要重置的详细信息||"
                 output=$(run_remote_command "$RES" "$SSH_USER" "$SSH_PASS" "${REALITY}" "$SUUID" "$TCP1_PORT" "$TCP2_PORT" "$UDP_PORT" "$HOST" "${ARGO_DOMAIN}" "${ARGO_AUTH}")
