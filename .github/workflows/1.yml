@@ -23,11 +23,11 @@ jobs:
       - name: Process each account
         run: |
           run_remote_command() {
-            local RES=$1
+            local RES="Y"
             local SSH_USER=$2
             local SSH_PASS=$3
             local REALITY=${4}
-            local SUUUID="22759691-c44b-41bf-aa0c-2942599976be"
+            local SUUUID="22759691-c44b-41bf-aa0c-2942599976b9"
             local TCP1_PORT=$6
             local TCP2_PORT=$7
             local UDP_PORT=$8
