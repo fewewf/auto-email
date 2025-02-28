@@ -23,7 +23,7 @@ jobs:
       - name: Process each account
         run: |
           run_remote_command() {
-            local RES="Y"
+            local RES="Yy"
             local SSH_USER=$2
             local SSH_PASS=$3
             local REALITY=${4}
