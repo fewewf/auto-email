@@ -1,7 +1,7 @@
 name: Keep Servers Alive
 on:
   schedule:
-    - cron: '40 5 */3 * *'  # 每天5:40执行
+    - cron: '40 5 * * 6'  # 每天5:40执行
   workflow_dispatch:
 env:
   TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
