@@ -1,0 +1,44 @@
+name: Keep Server Alive2
+
+on:
+  schedule:
+    - cron: '40 5 * * 6'  # 每周六 5:40 执行
+  workflow_dispatch:
+
+env:
+  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+  SSH_USER: ${{ secrets.SSH_USER }}
+  SSH_PASS: ${{ secrets.SSH_PASS }}
+  HOST: ${{ secrets.HOST }}
+
+jobs:
+  kee:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Install required packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sshpass
+
+      - name: Connect to server and send notification
+        run: |
+          send_telegram_notification() {
+            local message=$1
+            local escaped_message=$(echo "$message" | sed 's/[][(){}._*+^$|\\?-]/\\&/g' | sed 's/!/\\!/g')
+            curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+              -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
+              -d text="$escaped_message" \
+              -d parse_mode="MarkdownV2" > /dev/null 2>&1
+          }
+
+          if sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_USER@$HOST" "exit"; then
+            echo "✅ 服务器连接成功：$HOST"
+            send_telegram_notification "✅ 服务器连接成功：$HOST"
+          else
+            echo "❌ 服务器连接失败：$HOST"
+            send_telegram_notification "❌ 服务器连接失败：$HOST"
+          fi
