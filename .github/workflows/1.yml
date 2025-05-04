@@ -34,19 +34,19 @@ jobs:
           }
 
           
-          
+          count=0
+          for account in $(echo "${ACCOUNTS}" | jq -c '.[]'); do
+            count=$((count+1))
             SSH_USER=$(echo $account | jq -r '.SSH_USER')
             SSH_PASS=$(echo $account | jq -r '.SSH_PASS')
             HOST=$(echo $account | jq -r '.HOST')
 
             # 测试SSH连接，使用-t强制分配伪终端
             if sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_USER@$HOST" "exit"; then
-            echo "🎉 服务器连接成功！地址：$HOST"
-            send_telegram_notification "✅ 服务器连接成功！地址: $HOST"
+              echo "🎉 第【$count】台服务器连接成功！地址：$HOST"
+              send_telegram_notification "✅ 服务器连接成功！地址: $HOST"
             else
-            echo "❌ 服务器连接失败！地址：$HOST"
-            send_telegram_notification "❌ 服务器连接失败！地址: $HOST"
+              echo "❌ 第【$count】台服务器连接失败！地址：$HOST"
+              send_telegram_notification "✅ 服务器连接失败！地址: $HOST"
             fi
-
-          
-
+          done
