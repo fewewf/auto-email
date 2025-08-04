@@ -26,12 +26,12 @@ jobs:
       
       - name: Update READ
         run: |
-          echo "# Auto-Updated README\n\nLast updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" > README.md
+          echo "# Last updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" > README.md
 
       - name: Commit changes
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "chore: Auto-update vv [skip ci]"
+          commit_message: "chore: Auto-update vv7"
           branch: main  # 替换成你的默认分支名
 
       - name: Connect to server and send notification
