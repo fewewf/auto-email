@@ -23,6 +23,16 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y sshpass
+      
+      - name: Update READ
+        run: |
+          echo "# Auto-Updated README\n\nLast updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')" > README.md
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: Auto-update vv [skip ci]"
+          branch: main  # 替换成你的默认分支名
 
       - name: Connect to server and send notification
         run: |
