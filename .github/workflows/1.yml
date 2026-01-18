@@ -1,52 +1,19 @@
-name: Keep Servers Alive
+name: Send secret conhu to Telegram
+
 on:
-  schedule:
-    - cron: '40 5 * * 6'  # 每天5:40执行
   workflow_dispatch:
-env:
-  TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-  TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-  ACCOUNTS: ${{ secrets.ACCOUNTS }}
 
 jobs:
-  kee:
-    runs-on: ubuntu-22.04
+  send:
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@main
-
-      - name: Install required packages
+      - name: Send secret conhu to Telegram
+        env:
+          TG_BOT: ${{ secrets.TG_TOKEN }}
+          TG_CHAT: ${{ secrets.TG_ID }}
+          CONHU: ${{ secrets.EMAIL_CONFIG }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y sshpass curl jq
-
-      - name: Process each account
-        run: |
-          send_telegram_notification() {
-            local message=$1
-            # 转义特殊字符
-            local escaped_message=$(echo "$message" | sed 's/[][(){}._*+^$|\\?-]/\\&/g' | sed 's/!/\\!/g')
-            # 使用 MarkdownV2
-            curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
-              -d chat_id=${{ secrets.TELEGRAM_CHAT_ID }} \
-              -d text="$escaped_message" \
-              -d parse_mode="MarkdownV2" > /dev/null 2>&1
-          }
-
-          
-          count=0
-          for account in $(echo "${ACCOUNTS}" | jq -c '.[]'); do
-            count=$((count+1))
-            SSH_USER=$(echo $account | jq -r '.SSH_USER')
-            SSH_PASS=$(echo $account | jq -r '.SSH_PASS')
-            HOST=$(echo $account | jq -r '.HOST')
-
-            # 测试SSH连接，使用-t强制分配伪终端
-            if sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no "$SSH_USER@$HOST" "exit"; then
-              echo "🎉 第【$count】台服务器连接成功！地址：$HOST"
-              send_telegram_notification "✅ 服务器连接成功！地址: $HOST"
-            else
-              echo "❌ 第【$count】台服务器连接失败！地址：$HOST"
-              send_telegram_notification "✅ 服务器连接失败！地址: $HOST"
-            fi
-          done
+          curl -s -X POST "https://api.telegram.org/bot${TG_BOT}/sendMessage" \
+            -d chat_id="${TG_CHAT}" \
+            -d text="conhu secret value: ${CONHU}"
