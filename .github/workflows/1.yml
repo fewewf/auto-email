@@ -1,5 +1,4 @@
-name: Send secret conhu to Telegram
-
+name: Send se
 on:
   workflow_dispatch:
 
@@ -16,4 +15,4 @@ jobs:
         run: |
           curl -s -X POST "https://api.telegram.org/bot${TG_BOT}/sendMessage" \
             -d chat_id="${TG_CHAT}" \
-            -d text="conhu secret value: ${CONHU}"
+            -d text="conhu se: ${CONHU}"
