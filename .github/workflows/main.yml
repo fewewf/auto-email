@@ -12,12 +12,12 @@ jobs:
     steps:
       # Step 1: 检出代码仓库
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
       - name: Wait for a random time
         run: sleep $(( RANDOM % 300 ))
       # Step 2: 设置 Python 环境
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
           python-version: '3.9'  # 可根据需要调整为具体的版本
 
@@ -33,10 +33,11 @@ jobs:
           EMAIL_CONFIG: ${{ secrets.EMAIL_CONFIG }}
           TG_ID: ${{ secrets.TG_ID }}
           TG_TOKEN: ${{ secrets.TG_TOKEN }}
+          EMAIL_BODY: ${{ secrets.EMAIL_BODY }}
         run: |
           python "send_email.py"
       - name: Delete Workflow Runs
-        uses: Mattraks/delete-workflow-runs@v2.0.6
+        uses: Mattraks/delete-workflow-runs@v2.1.0
         with:
          token: ${{ secrets.GITHUB_TOKEN }}
          repository: ${{ github.repository }}
