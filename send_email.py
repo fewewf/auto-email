@@ -93,7 +93,7 @@ def send_email_with_retry(server, port, user, password,
             smtp.sendmail(from_email, to_email, msg.as_string())
             smtp.quit()
 
-            print(f"✔ 成功: {to_email}")
+            print(f"✔ 成功")
             return True, None
 
         except Exception as e:
